@@ -10,8 +10,8 @@ def download_video(resolution: int, video, save_path, filename):
     video.streams.get_by_itag(resolution).download(save_path, filename)
 
 
-async def get_videos(resolution: int, channel: Channel):
-    data = {'title': [], 'description': [], 'url': [], 'path': []}
+async def get_videos(resolution: int, channel: Channel, category: str):
+    data = {'title': [], 'description': [], 'url': [], 'path': [], "category": category}
     for video in channel.videos:
         path = f'./videos/{channel.channel_name}/'
         file = f"{video.video_id}.mp4"
@@ -30,7 +30,7 @@ def start(data) -> None:
     tasks = []
     for index, url in enumerate(data['url']):
         channel = Channel(url)
-        task = multiprocessing.Process(target=asyncio.run, args=(get_videos(22, channel),))
+        task = multiprocessing.Process(target=asyncio.run, args=(get_videos(22, channel, data['category'][index]),))
         tasks.append(task)
     for task in tasks:
         task.start()
