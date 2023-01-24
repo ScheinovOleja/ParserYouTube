@@ -13,15 +13,19 @@ def download_video(resolution: int, video, save_path, filename):
 async def get_videos(resolution: int, channel: Channel, category: str):
     data = {'title': [], 'description': [], 'url': [], 'path': [], "category": category}
     for video in channel.videos:
-        path = f'./videos/{channel.channel_name}/'
-        file = f"{video.video_id}.mp4"
-        task = threading.Thread(target=download_video, args=(resolution, video, path, file,))
-        data['title'].append(video.title)
-        data['description'].append(video.description)
-        data['url'].append(video.watch_url)
-        data['path'].append(path + file)
-        task.start()
-        task.join()
+        try:
+            path = f'./videos/{channel.channel_name}/'
+            file = f"{video.video_id}.mp4"
+            data['title'].append(video.title)
+            data['description'].append(video.description)
+            data['url'].append(video.watch_url)
+            data['path'].append(path + file)
+            task = threading.Thread(target=download_video, args=(resolution, video, path, file,))
+            task.start()
+            task.join()
+        except Exception as e:
+            print(f'Ошибка - {e}')
+            continue
     new_data = pd.DataFrame.from_dict(data)
     new_data.to_csv(f'result-{channel.channel_name}.csv')
 
@@ -40,6 +44,6 @@ def start(data) -> None:
 
 if __name__ == '__main__':
     channels = pd.read_csv('channels.csv', delimiter=';')
-    chunks = np.array_split(channels, 1)
+    chunks = np.array_split(channels, 2)
     for data in chunks:
         start(data.to_dict('list'))
