@@ -1,6 +1,8 @@
+import argparse
 import asyncio
 import multiprocessing
 import threading
+
 import numpy as np
 import pandas as pd
 from pytube import Channel
@@ -27,14 +29,15 @@ async def get_videos(resolution: int, channel: Channel, category: str):
             print(f'Ошибка - {e}')
             continue
     new_data = pd.DataFrame.from_dict(data)
-    new_data.to_csv(f'result-{channel.channel_name}.csv')
+    new_data.to_csv(f'result-{channel.channel_name}.csv', sep=';')
 
 
-def start(data) -> None:
+def start(data, resolution) -> None:
     tasks = []
     for index, url in enumerate(data['url']):
         channel = Channel(url)
-        task = multiprocessing.Process(target=asyncio.run, args=(get_videos(22, channel, data['category'][index]),))
+        task = multiprocessing.Process(target=asyncio.run,
+                                       args=(get_videos(resolution, channel, data['category'][index]),))
         tasks.append(task)
     for task in tasks:
         task.start()
@@ -43,7 +46,23 @@ def start(data) -> None:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Парсер сайтов брендовой одежды',
+                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-r', '--resolution', type=str,
+                        help="""Выбор качества видео.
+[360p, 720p, 1080p]""")
+    args = parser.parse_args()
+    if not args.resolution:
+        args.resolution = '360p'
+    if args.resolution == '360p':
+        resolution = 18
+    elif args.resolution == '720p':
+        resolution = 22
+    elif args.resolution == '1080p':
+        resolution = 299
+    else:
+        resolution = 18
     channels = pd.read_csv('channels.csv', delimiter=';')
-    chunks = np.array_split(channels, 2)
+    chunks = np.array_split(channels, 1)
     for data in chunks:
-        start(data.to_dict('list'))
+        start(data.to_dict('list'), resolution)
