@@ -35,10 +35,14 @@ async def get_videos(resolution: int, channel: Channel, category: str):
 def start(data, resolution) -> None:
     tasks = []
     for index, url in enumerate(data['url']):
-        channel = Channel(url)
-        task = multiprocessing.Process(target=asyncio.run,
-                                       args=(get_videos(resolution, channel, data['category'][index]),))
-        tasks.append(task)
+        try:
+            channel = Channel(url)
+            task = multiprocessing.Process(target=asyncio.run,
+                                           args=(get_videos(resolution, channel, data['category'][index]),))
+            tasks.append(task)
+        except BaseException as e:
+            print(f'Ошибка - {e}')
+            continue
     for task in tasks:
         task.start()
     for task in tasks:
