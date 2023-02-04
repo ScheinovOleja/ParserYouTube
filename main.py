@@ -58,6 +58,8 @@ def start(data, itag) -> None:
         task.start()
     for task in tasks:
         task.join()
+        task.close()
+        exit(1)
 
 
 if __name__ == '__main__':
